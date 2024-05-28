@@ -5,13 +5,14 @@ import pandas as pd
 import sklearn.preprocessing as skpr
 
 class NumericalEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, cols=None, fit_replace=False, encoder='standard', numeric_rate=0.1,
+    def __init__(self, cols=None, fit_replace=True, encoder='standard', numeric_rate=0.1,
                  rated_search=True, only_float=True, **encoder_params):
 
         self._encoders_list = {'standard': skpr.StandardScaler,
-                          'min_max': skpr.MinMaxScaler,
-                          'normalizer': skpr.Normalizer,
-                          'max_abs': skpr.MaxAbsScaler}
+                               'min_max': skpr.MinMaxScaler, 
+                               'robust': skpr.RobustScaler,
+                               'normalizer': skpr.Normalizer,
+                               'max_abs': skpr.MaxAbsScaler}
 
         self.only_float = only_float
         self.cols = np.array(cols) if cols is not None else None

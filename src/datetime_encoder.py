@@ -7,7 +7,7 @@ import pandas as pd
 
 
 class DateTimeEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, cols=None, fit_replace=False,
+    def __init__(self, cols=None, fit_replace=True,
                  drop=True, min_rescale=False, fast_mode=True,
                  confidence_level=0.99, worst_proportion=0.01):
         self.cols = np.array(cols) if cols is not None else None

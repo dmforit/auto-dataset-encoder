@@ -8,16 +8,22 @@ import sklearn.preprocessing as skpr
 
 
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, cols=None, fit_replace=False, encoder='binary',
-                 category_rate=0.1, rated_search=True, fast_mode=True,
+    def __init__(self, cols=None, fit_replace=True, encoder='binary',
+                 category_rate=0.1, target_related=True, rated_search=True, fast_mode=True,
                  confidence_level=0.99, worst_proportion=0.01, **encoder_params):
 
         self._hashing_enc_name = 'hashing'
         self._encoders_list = {'onehot': ce.OneHotEncoder,
                                'target_loo': ce.LeaveOneOutEncoder,
                                self._hashing_enc_name: ce.HashingEncoder,
-                               'binary': ce.BinaryEncoder}
-        self._target_encoders_list = np.array(['target_loo'])
+                               'binary': ce.BinaryEncoder,
+                               'mestimate': ce.MEstimateEncoder,
+                               'glmm': ce.GLMMEncoder,
+                               'ordinal': ce.OrdinalEncoder}
+        self._target_encoders_list = np.array(['target_loo', 'backward_difference', 
+                                               'mestimate', 'glmm'])
+        
+        self.target_default = 'target_loo'
 
         # stochastic approach
         eps = 1e-6
@@ -33,6 +39,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
         self.rated_search = rated_search
         self.encoder_params = encoder_params
         self._encoder = None
+        self.target_related = target_related
 
     def __repr__(self):
         return "CategoricalEncoder"
@@ -41,6 +48,9 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
         return "CategoricalEncoder"
 
     def fit(self, X, y=None, **fit_params):
+        if y is not None and self.target_related and self.encoder_name not in self._target_encoders_list:
+            self.encoder_name = self.target_default
+            
         # defining categorical columns
         if self.cols is None or self.fit_replace:
             self.cols = self.define_cols(X)
@@ -70,10 +80,12 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
             y_copy = deepcopy(y)
             if not self.is_y_approved(y_copy):
                 y_copy = skpr.LabelEncoder().fit_transform(y_copy)
-
+            else:
+                y_copy = y_copy.astype(float)
+            
         # fitting the encoder
         self._encoder.fit(pd.DataFrame(X), y_copy, **fit_params)
-
+        
         # self.cols backup
         self.cols = saved_cols
 
@@ -162,7 +174,11 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
             sample_names = set_before.intersection(set_after)
 
             # checking whether set is not empty
-            if bool(sample_names):
+            if self.encoder_name in self._target_encoders_list:
+                for num, col in enumerate(result):
+                    if num in self.cols:
+                        result[num] = f'{self.encoder_name}_{result[num]}'
+            elif bool(sample_names):
                 # renaming
                 for num, col in enumerate(result):
                     if col not in sample_names:
@@ -171,11 +187,7 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
         return result
 
     def is_y_approved(self, y):
-        try:
-            y.astype(float)
-            return True
-        except (ValueError, TypeError):
-            return False
+        return pd.api.types.is_numeric_dtype(y)
 
     def cols_to_numeric(self, X):
         if self.cols is None or not self.cols.shape[0]:

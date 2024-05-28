@@ -10,15 +10,16 @@ from datetime_encoder import DateTimeEncoder
 from categorical_encoder import CategoricalEncoder
 
 
-class CustomEncoder(BaseEstimator, TransformerMixin):
-    def __init__(self, categorical_args=None,
-                 numerical_args=None, datetime_args=None, categorical_enabled=True,
-                 numerical_enabled=True, datetime_enabled=True, target_encoder='label',
-                 target_encoding=True, keep_df=False):
+class Encoder(BaseEstimator, TransformerMixin):
+    def __init__(self, categorical_args=None, numerical_args=None, 
+                 datetime_args=None, categorical_enabled=True,
+                 numerical_enabled=True, datetime_enabled=True, 
+                 target_enabled=True, target_encoder='label', 
+                 keep_df=False):
 
         # Target info
         self.target_encoder = target_encoder
-        self.target_encoding = target_encoding
+        self.target_enabled = target_enabled
         self._target_encoders_list = {'label': skpr.LabelEncoder}
         self._encoder = None
         self.keep_df = keep_df
@@ -39,14 +40,14 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None, **fit_params):
         if self.categorical_enabled:
             self.categorical_enc.fit(X, y, **fit_params)
-
+            
         if self.numerical_enabled:
             self.numerical_enc.fit(X, y, **fit_params)
 
         if self.datetime_enabled:
             self.datetime_enc.fit(X, y, **fit_params)
 
-        if self.target_encoding and y is not None:
+        if y is not None and (self.target_enabled or not pd.api.types.is_numeric_dtype(y)):
             if self.target_encoder in self._target_encoders_list:
                 self._encoder = self._target_encoders_list[self.target_encoder]().fit(y)
             else:
@@ -72,19 +73,18 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
             X_result, y_copy = self.fill_omissions(X, y)
             X_result, y_copy = self.drop_duplicates(X_result, y_copy)
             y_names = pd.DataFrame(y_copy).columns.tolist()
-            if self.target_encoding:
+            if self.target_enabled or not pd.api.types.is_numeric_dtype(y_copy):
                 if self._encoder is not None:
                     y_copy = self._encoder.transform(y_copy)
                 else:
                     y_copy = skpr.LabelEncoder().fit_transform(y_copy)
         else:
             X_result = self.fill_omissions(X)
-            X_result = self.drop_duplicates(X_result)
-
+            
         # main encoding
         if not isinstance(X_result, pd.DataFrame):
             X_result = pd.DataFrame(X_result)
-
+                
         if self.numerical_enabled:
             X_result = self.numerical_enc.transform(X_result, y_copy)
 
@@ -93,7 +93,7 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
 
         if self.datetime_enabled:
             X_result = self.datetime_enc.transform(X_result, y_copy)
-
+            
         if not isinstance(X, pd.DataFrame) or not self.keep_df:
             X_result = X_result.to_numpy()
 
@@ -103,7 +103,7 @@ class CustomEncoder(BaseEstimator, TransformerMixin):
             y_copy = np.squeeze(y_copy)
 
         # getting the result
-        if self.target_encoding and y_copy is not None:
+        if y_copy is not None and len(y_copy.shape) > 0:
             return X_result, y_copy
         else:
             return X_result
