@@ -18,11 +18,5 @@ if __name__ == "__main__":
 else:
     module_type = 'Imported'
 version_number = __version__
-print("""%s featurewiz %s. Use the following syntax:
-    >>> enc = Encoder(categorical_args=None, numerical_args=None, 
-      datetime_args=None, categorical_enabled=True, numerical_enabled=True, 
-      datetime_enabled=True, target_enabled=False, target_encoder='label', keep_df=False)
-    >>> X_train_processed, y_train_processed = enc.fit_transform(X_train, y_train)
-    >>> X_test_processed = enc.transform(X_test)
-    """ %(module_type, version_number))
+print("%s dataset_encoder %s" %(module_type, version_number))
 ################################################################################
