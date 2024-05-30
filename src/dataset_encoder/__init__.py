@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ################################################################################
 #     dataset_encoder for AutoML systems 
-#     Python v3.8+
+#     Python v3.10+
 #     Created by dmforit
 #     Licensed under Apache License v2
 ################################################################################
