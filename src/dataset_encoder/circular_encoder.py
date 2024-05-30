@@ -3,6 +3,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 import numpy as np
 import pandas as pd
 
+
 class CircularEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, limits=None, fit_replace=True, tol=1e-8):
         self.limits = limits

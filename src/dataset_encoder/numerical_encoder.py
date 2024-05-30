@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing as skpr
 
+
 class NumericalEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, cols=None, fit_replace=True, encoder='standard', numeric_rate=0.1,
                  rated_search=True, only_float=True, **encoder_params):

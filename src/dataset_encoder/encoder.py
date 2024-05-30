@@ -36,6 +36,9 @@ class Encoder(BaseEstimator, TransformerMixin):
         self.categorical_enabled = categorical_enabled
         self.numerical_enabled = numerical_enabled
         self.datetime_enabled = datetime_enabled
+        
+        # Missing value placeholder
+        self.missing_value = 1e-6
 
     def fit(self, X, y=None, **fit_params):
         if self.categorical_enabled:
@@ -118,9 +121,16 @@ class Encoder(BaseEstimator, TransformerMixin):
         if not isinstance(X_result, pd.DataFrame):
             X_result = pd.DataFrame(X_result)
 
+        # For categories and datetime
         for col_ind in X_result.dtypes[X_result.dtypes == 'category'].index:
-            X_result[col_ind] = X_result[col_ind].cat.add_categories([1e-6])
-        X_result.fillna(1e-6, inplace=True)
+            X_result[col_ind] = X_result[col_ind].cat.add_categories([self.missing_value])
+            
+        X_result.loc[:, self.categorical_enc.get_cols()].fillna(self.missing_value, inplace=True)
+        X_result.loc[:, self.datetime_enc.get_cols()].fillna(self.missing_value, inplace=True)
+        
+        # For numerical features
+        for num_col in self.numerical_enc.get_cols():
+            X_result.loc[:, num_col].fillna(X_result[num_col].mean(skipna=True), inplace=True)
 
         if y is not None:
             if not isinstance(y, pd.Series):
