@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import secrets
 import string
-from numerical_encoder import NumericalEncoder
-from datetime_encoder import DateTimeEncoder
-from categorical_encoder import CategoricalEncoder
+from .numerical_encoder import NumericalEncoder
+from .datetime_encoder import DateTimeEncoder
+from .categorical_encoder import CategoricalEncoder
 
 
 class Encoder(BaseEstimator, TransformerMixin):

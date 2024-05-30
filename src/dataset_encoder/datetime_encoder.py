@@ -1,4 +1,4 @@
-from circular_encoder import CircularEncoder
+from .circular_encoder import CircularEncoder
 import math
 from copy import deepcopy
 from sklearn.base import BaseEstimator, TransformerMixin
