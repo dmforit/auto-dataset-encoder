@@ -4,3 +4,12 @@
 </h1>
 
 Module for Automatic Encoding and Feature Type Inference for AutoML Systems
+
+## Usage
+
+### Installation
+
+To install the package, run the following command:
+
+```bash
+pip install dataset-encoder
